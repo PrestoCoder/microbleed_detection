@@ -1,0 +1,277 @@
+diff --git a/.DS_Store b/.DS_Store
+index 5008ddf..15d7ea5 100644
+Binary files a/.DS_Store and b/.DS_Store differ
+diff --git a/microbleednet/.DS_Store b/microbleednet/.DS_Store
+index 4d252f3..16dfb42 100644
+Binary files a/microbleednet/.DS_Store and b/microbleednet/.DS_Store differ
+diff --git a/microbleednet/microbleed_net/microbleednet_commands.py b/microbleednet/microbleed_net/microbleednet_commands.py
+index 9bd52a8..762164f 100644
+--- a/microbleednet/microbleed_net/microbleednet_commands.py
++++ b/microbleednet/microbleed_net/microbleednet_commands.py
+@@ -302,8 +302,8 @@ def fine_tune(args):
+         if args.cp_everyn_N < 1 or args.cp_everyn_N > args.num_epochs:
+             raise ValueError(
+                 'N value for saving checkpoints for every N epochs must be an int and > 1and < number of epochs')
+-    if args.num_classes < 1:
+-        raise ValueError('Number of classes to consider in target segmentations must be an int and > 1')
++    # if args.num_classes < 1:
++    #     raise ValueError('Number of classes to consider in target segmentations must be an int and > 1')
+ 
+     if args.save_full_model == 'True':
+         save_wei = False
+@@ -319,11 +319,11 @@ def fine_tune(args):
+                 raise RuntimeError(
+                     'Cannot find data; export microbleednet_PRETRAINED_MODEL_PATH=/path/to/my/mwsc/model')
+     else:
+-        if os.path.isfile(args.model_name + '_cdet.pth') is False or \
+-                os.path.isfile(args.model_name + '_cdisc_student.pth') is False:
++        if os.path.isfile(args.model_name + '_cdet_model.pth') is False or \
++                os.path.isfile(args.model_name + '_cdisc_student_model.pth') is False:
+             raise ValueError('In directory ' + os.path.dirname(args.model_name) +
+-                             ', ' + os.path.basename(args.model_name) + '_cdet.pth or' +
+-                             os.path.basename(args.model_name) + '_cdisc_student.pth' +
++                             ', ' + os.path.basename(args.model_name) + '_cdet_model.pth or' +
++                             os.path.basename(args.model_name) + '_cdisc_student_model.pth' +
+                              'does not appear to be a valid model file')
+         else:
+             model_dir = os.path.dirname(args.model_name)
+diff --git a/microbleednet/microbleed_net/microbleednet_data_preparation.py b/microbleednet/microbleed_net/microbleednet_data_preparation.py
+index 2c37bcf..439b84f 100644
+--- a/microbleednet/microbleed_net/microbleednet_data_preparation.py
++++ b/microbleednet/microbleed_net/microbleednet_data_preparation.py
+@@ -358,10 +358,11 @@ def load_and_prepare_cmb_data_frst_ukbb(data_paths, train='train', ps=32, priorm
+     patch_data = np.array([])
+     patch_labels = np.array([])
+     patch_pws = np.array([])
+-    for im in range(len(data_paths)):
+-        inp_path = data_paths['inp_path']
+-        lab_path = data_paths['gt_path']
+-        data = nib.load(inp_path).get_data().astype(float)
++    print(data_paths);
++    for im in data_paths:
++        inp_path = im['inp_path']
++        lab_path = im['gt_path']
++        data = nib.load(inp_path).get_fdata().astype(float)
+         # data = resize(data, [data.shape[0] // 2, data.shape[1] // 2, data.shape[2] // 2], preserve_range=True)
+         try:
+             label = nib.load(lab_path).get_data().astype(float)
+diff --git a/microbleednet/microbleed_net/microbleednet_evaluate.py b/microbleednet/microbleed_net/microbleednet_evaluate.py
+index 3843f21..82c3d86 100644
+--- a/microbleednet/microbleed_net/microbleednet_evaluate.py
++++ b/microbleednet/microbleed_net/microbleednet_evaluate.py
+@@ -42,7 +42,7 @@ def evaluate_cdet(testdata, model, batch_size, device, verbose=False):
+     model.eval()
+     nsteps = max(testdata[0].shape[0] // batch_size, 1)
+     prob_array = np.array([])
+-    testdataset = microbleednet_dataset_utils.TestDataset(testdata)
++    testdataset = microbleednet_dataset_utils.WMHTestDataset(testdata)
+     test_dataloader = DataLoader(testdataset, batch_size=1, shuffle=False, num_workers=0)
+     # gen_next_test_batch = microbleednet_utils.batch_generator(testdata, batch_size, shuffle=False)
+     with torch.no_grad():
+@@ -123,7 +123,7 @@ def evaluate_cdisc_student(testdata, smodel, batch_size, device, verbose=False):
+     nsteps = max(testdata[0].shape[0] // batch_size, 1)
+     pred_class_array = np.array([])
+     # gen_next_test_batch = microbleednet_utils.batch_generator(testdata, batch_size, shuffle=False)
+-    testdataset = microbleednet_dataset_utils.TestDataset(testdata)
++    testdataset = microbleednet_dataset_utils.WMHTestDataset(testdata)
+     test_dataloader = DataLoader(testdataset, batch_size=1, shuffle=False, num_workers=0)
+     with torch.no_grad():
+         for batchidx, test_dict in enumerate(test_dataloader):
+diff --git a/microbleednet/microbleed_net/microbleednet_models.py b/microbleednet/microbleed_net/microbleednet_models.py
+index 8a5451c..46057a1 100644
+--- a/microbleednet/microbleed_net/microbleednet_models.py
++++ b/microbleednet/microbleed_net/microbleednet_models.py
+@@ -3,7 +3,7 @@ from __future__ import division
+ from __future__ import print_function
+ 
+ import torch.nn as nn
+-from microbleednet.utils import microbleednet_model_utils
++from microbleednet.utils import model_utils
+ import numpy as np
+ import torch
+ import torch.nn.functional as F
+@@ -27,13 +27,13 @@ class CDetNet(nn.Module):
+         self.n_layers = 3
+         self.bilinear = bilinear
+ 
+-        self.inpconv = microbleednet_model_utils.OutConv(n_channels, 3, name="inpconv_")
+-        self.convfirst = microbleednet_model_utils.DoubleConv(3, init_channels, 3, 1, name="convfirst_")
+-        self.down1 = microbleednet_model_utils.Down(init_channels, init_channels*2, 3, 1, name="down1_")
+-        self.down2 = microbleednet_model_utils.Down(init_channels*2, init_channels*4, 3, 1, name="down2_")
+-        self.up2 = microbleednet_model_utils.Up(init_channels*4, init_channels*2, 3, "up2_", bilinear)
+-        self.up1 = microbleednet_model_utils.Up(init_channels*2, init_channels, 3, "up1_", bilinear)
+-        self.outconv = microbleednet_model_utils.OutConv(init_channels, n_classes, name="outconv_")
++        self.inpconv = model_utils.OutConv(n_channels, 3)
++        self.convfirst = model_utils.DoubleConv(3, init_channels, 3, 1)
++        self.down1 = model_utils.Down(init_channels, init_channels*2, 3, 1)
++        self.down2 = model_utils.Down(init_channels*2, init_channels*4, 3, 1)
++        self.up2 = model_utils.Up(init_channels*4, init_channels*2, 3, bilinear)
++        self.up1 = model_utils.Up(init_channels*2, init_channels, 3, bilinear)
++        self.outconv = model_utils.OutConv(init_channels, n_classes)
+ 
+     def forward(self, x):
+         xi = self.inpconv(x)
+@@ -58,13 +58,13 @@ class CDiscNet(nn.Module):
+         self.n_layers = 3
+         self.bilinear = bilinear
+ 
+-        self.inpconv = microbleednet_model_utils.OutConv(n_channels, 3, name="inpconv_")
+-        self.convfirst = microbleednet_model_utils.DoubleConv(3, init_channels, 3, 1, name="convfirst_")
+-        self.down1 = microbleednet_model_utils.Down(init_channels, init_channels * 2, 3, 1, name="down1_")
+-        self.down2 = microbleednet_model_utils.Down(init_channels * 2, init_channels * 4, 3, 1, name="down2_")
+-        self.up2 = microbleednet_model_utils.Up(init_channels * 4, init_channels * 2, 3, "up2_", bilinear)
+-        self.up1 = microbleednet_model_utils.Up(init_channels * 2, init_channels, 3, "up1_", bilinear)
+-        self.outconv = microbleednet_model_utils.OutConv(init_channels, n_classes, name="outconv_")
++        self.inpconv = model_utils.OutConv(n_channels, 3, name="inpconv_")
++        self.convfirst = model_utils.DoubleConv(3, init_channels, 3, 1, name="convfirst_")
++        self.down1 = model_utils.Down(init_channels, init_channels * 2, 3, 1, name="down1_")
++        self.down2 = model_utils.Down(init_channels * 2, init_channels * 4, 3, 1, name="down2_")
++        self.up2 = model_utils.Up(init_channels * 4, init_channels * 2, 3, "up2_", bilinear)
++        self.up1 = model_utils.Up(init_channels * 2, init_channels, 3, "up1_", bilinear)
++        self.outconv = model_utils.OutConv(init_channels, n_classes, name="outconv_")
+ 
+     def forward(self, x):
+         xi = self.inpconv(x)
+@@ -89,9 +89,9 @@ class CDiscClass24(nn.Module):
+         self.n_layers = 3
+         self.bilinear = bilinear
+ 
+-        self.convfirst = microbleednet_model_utils.SingleConv(init_channels, init_channels//2, 1, name="convfirst_")
+-        self.down1 = microbleednet_model_utils.Down(init_channels//2, init_channels//2, 3, 3, name="down1_")
+-        self.down2 = microbleednet_model_utils.Down(init_channels//2, init_channels//2, 3, 3, name="down2_")
++        self.convfirst = model_utils.SingleConv(init_channels, init_channels//2, 1, name="convfirst_")
++        self.down1 = model_utils.Down(init_channels//2, init_channels//2, 3, 3, name="down1_")
++        self.down2 = model_utils.Down(init_channels//2, init_channels//2, 3, 3, name="down2_")
+         self.fc1 = nn.Linear(512*2, 128)
+         self.fc2 = nn.Linear(128, 32)
+         self.fc3 = nn.Linear(32, 2)
+@@ -116,9 +116,9 @@ class CDiscClass32(nn.Module):
+         self.n_layers = 3
+         self.bilinear = bilinear
+ 
+-        self.convfirst = microbleednet_model_utils.SingleConv(init_channels, init_channels//2, 1, name="convfirst_")
+-        self.down1 = microbleednet_model_utils.Down(init_channels, init_channels, 3, 3, name="down1_")
+-        self.down2 = microbleednet_model_utils.Down(init_channels, init_channels, 3, 3, name="down2_")
++        self.convfirst = model_utils.SingleConv(init_channels, init_channels//2, 1, name="convfirst_")
++        self.down1 = model_utils.Down(init_channels, init_channels, 3, 3, name="down1_")
++        self.down2 = model_utils.Down(init_channels, init_channels, 3, 3, name="down2_")
+         self.fc1 = nn.Linear(512, 128)
+         self.fc2 = nn.Linear(128, 32)
+         self.fc3 = nn.Linear(32, 2)
+@@ -143,10 +143,10 @@ class CDiscClass48(nn.Module):
+         self.n_layers = 3
+         self.bilinear = bilinear
+ 
+-        self.convfirst = microbleednet_model_utils.SingleConv(init_channels, init_channels//2, 1, name="convfirst_")
+-        self.down1 = microbleednet_model_utils.Down(init_channels, init_channels, 3, 3, name="down1_")
+-        self.down2 = microbleednet_model_utils.Down(init_channels, init_channels, 3, 3, name="down2_")
+-        self.down3 = microbleednet_model_utils.Down(init_channels, init_channels, 3, 1, name="down3_")
++        self.convfirst = model_utils.SingleConv(init_channels, init_channels//2, 1, name="convfirst_")
++        self.down1 = model_utils.Down(init_channels, init_channels, 3, 3, name="down1_")
++        self.down2 = model_utils.Down(init_channels, init_channels, 3, 3, name="down2_")
++        self.down3 = model_utils.Down(init_channels, init_channels, 3, 1, name="down3_")
+         self.fc1 = nn.Linear(512, 128)
+         self.fc2 = nn.Linear(128, 32)
+         self.fc3 = nn.Linear(32, 2)
+@@ -172,14 +172,14 @@ class CDiscStudentNet(nn.Module):
+         self.n_layers = 3
+         self.bilinear = bilinear
+ 
+-        self.inpconv = microbleednet_model_utils.OutConv(n_channels, 3, name="inpconv_")
+-        self.convfirst = microbleednet_model_utils.DoubleConv(3, init_channels, 3, 1, name="convfirst_")
+-        self.down1 = microbleednet_model_utils.Down(init_channels, init_channels * 2, 3, 1, name="down1_")
+-        self.down2 = microbleednet_model_utils.Down(init_channels * 2, init_channels * 4, 3, 1, name="down2_")
++        self.inpconv = model_utils.OutConv(n_channels, 3)
++        self.convfirst = model_utils.DoubleConv(3, init_channels, 3, 1)
++        self.down1 = model_utils.Down(init_channels, init_channels * 2, 3, 1)
++        self.down2 = model_utils.Down(init_channels * 2, init_channels * 4, 3, 1)
+ 
+-        self.classconvfirst = microbleednet_model_utils.SingleConv(init_channels * 4, init_channels * 2, 1, name="clconvfirst_")
+-        self.classdown1 = microbleednet_model_utils.Down(init_channels * 2, init_channels * 2, 3, 3, name="down1_")
+-        self.classdown2 = microbleednet_model_utils.Down(init_channels * 2, init_channels * 2, 3, 3, name="down2_")
++        self.classconvfirst = model_utils.SingleConv(init_channels * 4, init_channels * 2, 1)
++        self.classdown1 = model_utils.Down(init_channels * 2, init_channels * 2, 3, 3)
++        self.classdown2 = model_utils.Down(init_channels * 2, init_channels * 2, 3, 3)
+         # self.down3 = Down(init_channels, init_channels//2, 1)
+         self.fc1 = nn.Linear(512 * 2, 128)
+         self.fc2 = nn.Linear(128, 32)
+@@ -198,4 +198,3 @@ class CDiscStudentNet(nn.Module):
+         x1 = self.fc2(x1)
+         x1 = self.fc3(x1)
+         return torch.sigmoid(x1)
+-
+diff --git a/microbleednet/microbleed_net/microbleednet_train.py b/microbleednet/microbleed_net/microbleednet_train.py
+index 207ada0..14ffe43 100644
+--- a/microbleednet/microbleed_net/microbleednet_train.py
++++ b/microbleednet/microbleed_net/microbleednet_train.py
+@@ -293,8 +293,7 @@ def train_cdet(train_name_dicts, val_name_dicts, model, criterion, optimizer, sc
+             print(trainnames)
+             train_data = microbleednet_data_preparation.load_and_prepare_cmb_data_frst_ukbb(trainnames,
+                                                                                             train='train',
+-                                                                                            ps=patch_size,
+-                                                                                            augment=augment)
++                                                                                            ps=patch_size)
+             if train_data[0].shape[1] == 64:
+                 batch_size = 8
+             valdata = [val_data[0], val_data[1], val_data[2]]
+diff --git a/microbleednet/scripts/prepare_microbleednet_data b/microbleednet/scripts/prepare_microbleednet_data
+index a784ec3..a83d0a8 100644
+--- a/microbleednet/scripts/prepare_microbleednet_data
++++ b/microbleednet/scripts/prepare_microbleednet_data
+@@ -6,7 +6,7 @@
+ 
+ ######
+ 
+-if [ $# -lt 3 ] ; then
++if [ $# -lt 2 ] ; then
+   echo "Usage: `basename $0` <input_image_name> <output_basename>"
+   echo " "
+   echo "The script applies the preprocessing pipeline on the input image to be used in microbleednet with a specified output basename"
+diff --git a/microbleednet/utils/microbleednet_utils.py b/microbleednet/utils/microbleednet_utils.py
+index 782fdc0..c56f4f0 100644
+--- a/microbleednet/utils/microbleednet_utils.py
++++ b/microbleednet/utils/microbleednet_utils.py
+@@ -14,6 +14,10 @@ from collections import OrderedDict
+ # 09-01-2023
+ # =========================================================================================
+ 
++def print_model_summary(state_dict):
++    print("Model Summary from State Dict:")
++    for param_tensor in state_dict:
++        print(f"{param_tensor}, {state_dict[param_tensor].size()}")
+ 
+ def select_train_val_names(data_path, val_numbers):
+     """
+@@ -61,10 +65,11 @@ def freeze_layer_for_finetuning(model, layer_to_ft, verbose=False):
+ 
+ def loading_model(model_name, model, mode='weights'):
+     if mode == 'weights':
+-        axial_state_dict = torch.load(model_name)
++        axial_state_dict = torch.load(model_name,map_location=torch.device('cpu'))
+     else:
+-        ckpt = torch.load(model_name)
+-        axial_state_dict = ckpt['model_state_dict']
++        ckpt = torch.load(model_name,map_location=torch.device('cpu'))
++        # print_model_summary(ckpt)
++        axial_state_dict = ckpt
+ 
+     new_axial_state_dict = OrderedDict()
+     for key, value in axial_state_dict.items():
+@@ -73,6 +78,7 @@ def loading_model(model_name, model, mode='weights'):
+         else:
+             name = 'module.' + key
+         new_axial_state_dict[name] = value
++    print(new_axial_state_dict)
+     model.load_state_dict(new_axial_state_dict)
+     return model
+ 
+diff --git a/requirements.txt b/requirements.txt
+index f6e3cbe..7ca731b 100644
+--- a/requirements.txt
++++ b/requirements.txt
+@@ -1,4 +1,4 @@
+-nibabel>=2.*
++nibabel>=2.0.0
+ scipy
+ torch
+ numpy
