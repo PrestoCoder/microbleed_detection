@@ -8,7 +8,7 @@ import torch.nn as nn
 import os
 from torch.utils.data import DataLoader
 from microbleednet.microbleed_net import microbleednet_data_preparation
-from microbleednet.utils import (microbleednet_dataset_utils, microbleednet_utils)
+from microbleednet.utils import (microbleednet_dataset_utils, microbleednet_utils, utils)
 
 #=========================================================================================
 # Microbleednet training and validation functions
@@ -45,7 +45,7 @@ def validate_cdet(testdata, model, batch_size, device, criterion, verbose=False)
     model.eval()
     nsteps = max(testdata[0].shape[0] // batch_size, 1)
     prob_array = np.array([])
-    gen_next_test_batch = microbleednet_utils.batch_generator(testdata, batch_size, shuffle=False)
+    gen_next_test_batch = utils.batch_generator(testdata, batch_size, shuffle=False)
     dice_values = 0
     dice_values = 0
     val_batch_count = 0
@@ -101,7 +101,7 @@ def validate_cdisc_teacher(testdata, model, model_class, batch_size, device, cri
     model.eval()
     nsteps = max(testdata[0].shape[0] // batch_size, 1)
     prob_array = np.array([])
-    gen_next_test_batch = microbleednet_utils.batch_generator(testdata, batch_size, shuffle=False)
+    gen_next_test_batch = utils.batch_generator(testdata, batch_size, shuffle=False)
     dice_values = 0
     dice_values = 0
     val_batch_count = 0
@@ -170,7 +170,7 @@ def validate_cdisc_student(testdata, smodel, batch_size, device, criterion, verb
     smodel.eval()
     nsteps = max(testdata[0].shape[0] // batch_size, 1)
     prob_array = np.array([])
-    gen_next_test_batch = microbleednet_utils.batch_generator(testdata, batch_size, shuffle=False)
+    gen_next_test_batch = utils.batch_generator(testdata, batch_size, shuffle=False)
     dice_values = 0
     dice_values = 0
     val_batch_count = 0
@@ -300,7 +300,7 @@ def train_cdet(train_name_dicts, val_name_dicts, model, criterion, optimizer, sc
             traindata = [train_data[0], train_data[1], train_data[2]]
             numsteps = min(traindata[0].shape[0] // batch_size, 400)
             print('No. of mini-batches: ' + str(numsteps), flush=True)
-            gen_next_train_batch = microbleednet_utils.batch_generator(traindata, batch_size,
+            gen_next_train_batch = utils.batch_generator(traindata, batch_size,
                                                                        shuffle=True)
 
             for j in range(numsteps):
@@ -488,7 +488,7 @@ def train_cdisc_teacher(train_name_dicts, val_name_dicts, model, model_class, cr
             traindata = [train_data[0], train_data[1], train_data[2]]
             numsteps = min(traindata[0].shape[0] // batch_size, 400)
             print('No. of mini-batches: ' + str(numsteps), flush=True)
-            gen_next_train_batch = microbleednet_utils.batch_generator(traindata, batch_size,
+            gen_next_train_batch = utils.batch_generator(traindata, batch_size,
                                                                        shuffle=True)
 
             for j in range(numsteps):
@@ -710,7 +710,7 @@ def train_cdisc_student(train_name_dicts, val_name_dicts, tmodel, tmodel_class, 
             traindata = [train_data[0], train_data[1], train_data[2]]
             numsteps = min(traindata[0].shape[0] // batch_size, 400)
             print('No. of mini-batches: ' + str(numsteps), flush=True)
-            gen_next_train_batch = microbleednet_utils.batch_generator(traindata, batch_size,
+            gen_next_train_batch = utils.batch_generator(traindata, batch_size,
                                                                        shuffle=True)
             for j in range(numsteps):
                 smodel.train()
