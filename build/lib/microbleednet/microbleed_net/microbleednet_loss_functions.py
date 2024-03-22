@@ -79,11 +79,16 @@ class CombinedLoss(_Loss):
         probs_vector = input_soft.contiguous().view(-1, 2)
         mask_vector = (probs_vector[:, 1] > 0.5).double()
         l2 = torch.mean(self.dice_loss(mask_vector, target))
+
+        # Determine the appropriate device
+        device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+
         if weight is None:
             l1 = torch.mean(self.cross_entropy_loss.forward(input, target))
         else:
+            weight = weight.to(device)
             l1 = torch.mean(
-                torch.mul(self.cross_entropy_loss.forward(input, target), weight.cuda()))
+                torch.mul(self.cross_entropy_loss.forward(input, target), weight))
         return l1 + l2
 
 
