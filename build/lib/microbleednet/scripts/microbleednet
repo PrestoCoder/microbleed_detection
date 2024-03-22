@@ -57,7 +57,7 @@ if __name__ == "__main__":
                                     help='Momentum for sgd optimiser (default=0.9)')
     optionalNamedtrain.add_argument('-bs', '--batch_size', type=int, required=False, default=8,
                                     help='Batch size (default=8)')
-    optionalNamedtrain.add_argument('-ep', '--num_epochs', type=int, required=False, default=60,
+    optionalNamedtrain.add_argument('-ep', '--num_epochs', type=int, required=False, default=1,
                                     help='Number of epochs (default=60)')
     optionalNamedtrain.add_argument('-es', '--early_stop_val', type=int, required=False, default=20,
                                     help='No. of epochs to wait for progress (early stopping) (default=20)')
@@ -143,7 +143,7 @@ if __name__ == "__main__":
                                  help='Momentum for sgd optimiser (default=0.9)')
     optionalNamedft.add_argument('-bs', '--batch_size', type=int, required=False, default=8,
                                  help='Batch size (default=8)')
-    optionalNamedft.add_argument('-ep', '--num_epochs', type=int, required=False, default=60,
+    optionalNamedft.add_argument('-ep', '--num_epochs', type=int, required=False, default=1,
                                  help='Number of epochs (default=60)')
     optionalNamedft.add_argument('-es', '--early_stop_val', type=int, required=False, default=20,
                                  help='No. of epochs to wait for progress (early stopping) (default=20)')
@@ -197,7 +197,7 @@ if __name__ == "__main__":
                                  help='Momentum for sgd optimiser (default=0.9)')
     optionalNamedcv.add_argument('-bs', '--batch_size', type=int, required=False, default=8,
                                  help='Batch size (default=8)')
-    optionalNamedcv.add_argument('-ep', '--num_epochs', type=int, required=False, default=60,
+    optionalNamedcv.add_argument('-ep', '--num_epochs', type=int, required=False, default=1,
                                  help='Number of epochs (default=60)')
     optionalNamedcv.add_argument('-es', '--early_stop_val', type=int, required=False, default=20,
                                  help='No. of epochs to wait for progress (early stopping) (default=20)')
