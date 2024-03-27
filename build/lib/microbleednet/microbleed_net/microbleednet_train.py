@@ -282,20 +282,23 @@ def train_cdet(train_name_dicts, val_name_dicts, model, criterion, optimizer, sc
                 print('Not found any model to load and resume training!', flush=True)
 
     print('Training started!!.......................................')
-    for epoch in range(start_epoch, num_epochs + 1):
+    # for epoch in range(start_epoch, num_epochs + 1):
+    for epoch in range(1):
         model.train()
         running_loss = 0.0
         batch_count = 0
         print('Epoch: ' + str(epoch) + ' starting!..............................')
-        for i in range(num_iters):
+        # for i in range(num_iters):
+        for i in range(1):
             trainnames = train_name_dicts[i * batch_factor:(i + 1) * batch_factor]
             print('Training files names listing...................................')
-            print(trainnames)
+            # print(trainnames)
             train_data = microbleednet_data_preparation.load_and_prepare_cmb_data_frst_ukbb(trainnames,
                                                                                             train='train',
                                                                                             ps=patch_size)
             if train_data[0].shape[1] == 64:
-                batch_size = 8
+                # batch_size = 8
+                batch_size = 2
             valdata = [val_data[0], val_data[1], val_data[2]]
             traindata = [train_data[0], train_data[1], train_data[2]]
             numsteps = min(traindata[0].shape[0] // batch_size, 400)
@@ -303,7 +306,8 @@ def train_cdet(train_name_dicts, val_name_dicts, model, criterion, optimizer, sc
             gen_next_train_batch = utils.batch_generator(traindata, batch_size,
                                                                        shuffle=True)
 
-            for j in range(numsteps):
+            # for j in range(numsteps):
+            for j in range(1):
                 model.train()
                 X, y, pw = next(gen_next_train_batch)
                 X = X.transpose(0, 4, 1, 2, 3)
@@ -364,10 +368,48 @@ def train_cdet(train_name_dicts, val_name_dicts, model, criterion, optimizer, sc
                 'best_val_dice': best_val_dice
             }, ckpt_path)
 
+        # Commented bcoz of the error :- can't convert cuda:0 device type tensor to numpy. Use Tensor.cpu() to copy the tensor to host memory first.
+        # if save_checkpoint:
+        #     np.savez(os.path.join(dir_checkpoint, 'losses_cdet.npz'), train_loss=losses_train,
+        #              val_loss=losses_val)
+        #     np.savez(os.path.join(dir_checkpoint, 'validation_dice_cdet.npz'), dice_val=dice_val)
+        
+        print("save_checkpoint:- ", save_checkpoint, type(save_checkpoint));
+        print("losses_train:- ", losses_train, type(losses_train));
+        print("losses_val:- ", losses_val, type(losses_val));
+        print("dice_val:- ", dice_val, type(dice_val));
+
         if save_checkpoint:
-            np.savez(os.path.join(dir_checkpoint, 'losses_cdet.npz'), train_loss=losses_train,
-                     val_loss=losses_val)
-            np.savez(os.path.join(dir_checkpoint, 'validation_dice_cdet.npz'), dice_val=dice_val)
+        # Convert tensors to numpy arrays if they are on CUDA
+        # For training and validation losses
+            if torch.is_tensor(losses_train):
+                losses_train = losses_train.cpu().numpy()
+            if torch.is_tensor(losses_val):
+                losses_val = losses_val.cpu().numpy()
+            
+            # Save the training and validation losses
+            np.savez(os.path.join(dir_checkpoint, 'losses_cdet.npz'), train_loss=losses_train, val_loss=losses_val)
+            
+            dice_val_arrays = []
+
+            # Iterate over each tensor in the list dice_val
+            for tensor in dice_val:
+                if tensor.is_cuda:
+                    # Convert CUDA tensor to CPU, then to a NumPy array
+                    numpy_array = tensor.cpu().numpy()
+                else:
+                    # Directly convert CPU tensor to a NumPy array
+                    numpy_array = tensor.numpy()
+
+                # Append the numpy array to the list
+                dice_val_arrays.append(numpy_array)
+            
+            # If you expect dice_val to always contain only one tensor,
+            # you can directly access the first element instead of saving the whole list
+            # Example: np.savez(os.path.join(dir_checkpoint, 'validation_dice_cdet.npz'), dice_val=dice_val_arrays[0])
+            
+            # Save the list of numpy arrays
+            np.savez(os.path.join(dir_checkpoint, 'validation_dice_cdet.npz'), dice_val=dice_val_arrays)
 
         early_stopping(val_av_loss, val_av_dice, best_val_dice, model, epoch, optimizer, scheduler, av_loss,
                        train_params, weights=save_weights, checkpoint=save_checkpoint, save_condition=save_case,

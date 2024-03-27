@@ -58,13 +58,21 @@ class CDiscNet(nn.Module):
         self.n_layers = 3
         self.bilinear = bilinear
 
-        self.inpconv = model_utils.OutConv(n_channels, 3, name="inpconv_")
-        self.convfirst = model_utils.DoubleConv(3, init_channels, 3, 1, name="convfirst_")
-        self.down1 = model_utils.Down(init_channels, init_channels * 2, 3, 1, name="down1_")
-        self.down2 = model_utils.Down(init_channels * 2, init_channels * 4, 3, 1, name="down2_")
-        self.up2 = model_utils.Up(init_channels * 4, init_channels * 2, 3, "up2_", bilinear)
-        self.up1 = model_utils.Up(init_channels * 2, init_channels, 3, "up1_", bilinear)
-        self.outconv = model_utils.OutConv(init_channels, n_classes, name="outconv_")
+        # self.inpconv = model_utils.OutConv(n_channels, 3, name="inpconv_")
+        # self.convfirst = model_utils.DoubleConv(3, init_channels, 3, 1, name="convfirst_")
+        # self.down1 = model_utils.Down(init_channels, init_channels * 2, 3, 1, name="down1_")
+        # self.down2 = model_utils.Down(init_channels * 2, init_channels * 4, 3, 1, name="down2_")
+        # self.up2 = model_utils.Up(init_channels * 4, init_channels * 2, 3, "up2_", bilinear)
+        # self.up1 = model_utils.Up(init_channels * 2, init_channels, 3, "up1_", bilinear)
+        # self.outconv = model_utils.OutConv(init_channels, n_classes, name="outconv_")
+
+        self.inpconv = model_utils.OutConv(n_channels, 3)
+        self.convfirst = model_utils.DoubleConv(3, init_channels, 3, 1)
+        self.down1 = model_utils.Down(init_channels, init_channels*2, 3, 1)
+        self.down2 = model_utils.Down(init_channels*2, init_channels*4, 3, 1)
+        self.up2 = model_utils.Up(init_channels*4, init_channels*2, 3, bilinear)
+        self.up1 = model_utils.Up(init_channels*2, init_channels, 3, bilinear)
+        self.outconv = model_utils.OutConv(init_channels, n_classes)
 
     def forward(self, x):
         xi = self.inpconv(x)
@@ -89,9 +97,12 @@ class CDiscClass24(nn.Module):
         self.n_layers = 3
         self.bilinear = bilinear
 
-        self.convfirst = model_utils.SingleConv(init_channels, init_channels//2, 1, name="convfirst_")
-        self.down1 = model_utils.Down(init_channels//2, init_channels//2, 3, 3, name="down1_")
-        self.down2 = model_utils.Down(init_channels//2, init_channels//2, 3, 3, name="down2_")
+        # self.convfirst = model_utils.SingleConv(init_channels, init_channels//2, 1, name="convfirst_")
+        # self.down1 = model_utils.Down(init_channels//2, init_channels//2, 3, 3, name="down1_")
+        # self.down2 = model_utils.Down(init_channels//2, init_channels//2, 3, 3, name="down2_")
+        self.convfirst = model_utils.SingleConv(init_channels, init_channels//2, 1)
+        self.down1 = model_utils.Down(init_channels//2, init_channels//2, 3, 3)
+        self.down2 = model_utils.Down(init_channels//2, init_channels//2, 3, 3)
         self.fc1 = nn.Linear(512*2, 128)
         self.fc2 = nn.Linear(128, 32)
         self.fc3 = nn.Linear(32, 2)
@@ -116,9 +127,12 @@ class CDiscClass32(nn.Module):
         self.n_layers = 3
         self.bilinear = bilinear
 
-        self.convfirst = model_utils.SingleConv(init_channels, init_channels//2, 1, name="convfirst_")
-        self.down1 = model_utils.Down(init_channels, init_channels, 3, 3, name="down1_")
-        self.down2 = model_utils.Down(init_channels, init_channels, 3, 3, name="down2_")
+        # self.convfirst = model_utils.SingleConv(init_channels, init_channels//2, 1, name="convfirst_")
+        # self.down1 = model_utils.Down(init_channels, init_channels, 3, 3, name="down1_")
+        # self.down2 = model_utils.Down(init_channels, init_channels, 3, 3, name="down2_")
+        self.convfirst = model_utils.SingleConv(init_channels, init_channels//2, 1)
+        self.down1 = model_utils.Down(init_channels, init_channels, 3, 3)
+        self.down2 = model_utils.Down(init_channels, init_channels, 3, 3)
         self.fc1 = nn.Linear(512, 128)
         self.fc2 = nn.Linear(128, 32)
         self.fc3 = nn.Linear(32, 2)
@@ -143,10 +157,14 @@ class CDiscClass48(nn.Module):
         self.n_layers = 3
         self.bilinear = bilinear
 
-        self.convfirst = model_utils.SingleConv(init_channels, init_channels//2, 1, name="convfirst_")
-        self.down1 = model_utils.Down(init_channels, init_channels, 3, 3, name="down1_")
-        self.down2 = model_utils.Down(init_channels, init_channels, 3, 3, name="down2_")
-        self.down3 = model_utils.Down(init_channels, init_channels, 3, 1, name="down3_")
+        # self.convfirst = model_utils.SingleConv(init_channels, init_channels//2, 1, name="convfirst_")
+        # self.down1 = model_utils.Down(init_channels, init_channels, 3, 3, name="down1_")
+        # self.down2 = model_utils.Down(init_channels, init_channels, 3, 3, name="down2_")
+        # self.down3 = model_utils.Down(init_channels, init_channels, 3, 1, name="down3_")
+        self.convfirst = model_utils.SingleConv(init_channels, init_channels//2, 1)
+        self.down1 = model_utils.Down(init_channels, init_channels, 3, 3)
+        self.down2 = model_utils.Down(init_channels, init_channels, 3, 3)
+        self.down3 = model_utils.Down(init_channels, init_channels, 3, 1)
         self.fc1 = nn.Linear(512, 128)
         self.fc2 = nn.Linear(128, 32)
         self.fc3 = nn.Linear(32, 2)

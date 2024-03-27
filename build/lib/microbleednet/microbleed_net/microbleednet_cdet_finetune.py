@@ -93,7 +93,7 @@ def main(sub_name_dicts, ft_params, aug=True, save_cp=True, save_wei=True, save_
     num_val_subs = max(int(len(sub_name_dicts) * (1 - train_prop)), 1)
     train_name_dicts, val_name_dicts, val_ids = microbleednet_utils.select_train_val_names(sub_name_dicts,
                                                                                      num_val_subs)
-
+    
     scheduler = optim.lr_scheduler.MultiStepLR(optimizer, milestones, gamma=gamma, last_epoch=-1)
     model = microbleednet_train.train_cdet(train_name_dicts, val_name_dicts, model, criterion,
                                            optimizer, scheduler, ft_params, device, augment=aug,

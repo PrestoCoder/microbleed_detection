@@ -319,12 +319,13 @@ def fine_tune(args):
                 raise RuntimeError(
                     'Cannot find data; export microbleednet_PRETRAINED_MODEL_PATH=/path/to/my/mwsc/model')
     else:
+        print("FileName:- ", args.model_name + '_cdet_model.pth');
         if os.path.isfile(args.model_name + '_cdet_model.pth') is False or \
                 os.path.isfile(args.model_name + '_cdisc_student_model.pth') is False:
             raise ValueError('In directory ' + os.path.dirname(args.model_name) +
-                             ', ' + os.path.basename(args.model_name) + '_cdet_model.pth or' +
+                             ', ' + os.path.basename(args.model_name) + '_cdet_model.pth or ' +
                              os.path.basename(args.model_name) + '_cdisc_student_model.pth' +
-                             'does not appear to be a valid model file')
+                             ' does not appear to be a valid model file')
         else:
             model_dir = os.path.dirname(args.model_name)
             model_name = os.path.basename(args.model_name)

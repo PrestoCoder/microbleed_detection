@@ -3,6 +3,7 @@ from __future__ import division
 from __future__ import print_function
 
 import numpy as np
+import json
 import random
 import os
 import torch
@@ -19,17 +20,43 @@ def print_model_summary(state_dict):
     for param_tensor in state_dict:
         print(f"{param_tensor}, {state_dict[param_tensor].size()}")
 
-def select_train_val_names(data_path, val_numbers):
+# def select_train_val_names(data_path, val_numbers):
+#     """
+#     Select training and validation subjects randomly given th no. of validation subjects
+#     :param data_path: input filepaths
+#     :param val_numbers: int, number of validation subjects
+#     :return:
+#     """
+#     val_ids = random.choices(list(np.arange(len(data_path))), k=val_numbers)
+#     train_ids = np.setdiff1d(np.arange(len(data_path)), val_ids)
+#     data_path_train = [data_path[ind] for ind in train_ids]
+#     data_path_val = [data_path[ind] for ind in val_ids]
+#     print(data_path_train, '#########',data_path_val);
+#     return data_path_train, data_path_val, val_ids
+        
+
+def select_train_val_names(training_json_path, validation_json_path):
     """
-    Select training and validation subjects randomly given th no. of validation subjects
-    :param data_path: input filepaths
-    :param val_numbers: int, number of validation subjects
-    :return:
+    Reads training and validation data from specified JSON files and returns them.
+
+    :param training_json_path: Path to the JSON file containing training data.
+    :param validation_json_path: Path to the JSON file containing validation data.
+    :return: The training data, validation data, and an empty list for val_ids.
     """
-    val_ids = random.choices(list(np.arange(len(data_path))), k=val_numbers)
-    train_ids = np.setdiff1d(np.arange(len(data_path)), val_ids)
-    data_path_train = [data_path[ind] for ind in train_ids]
-    data_path_val = [data_path[ind] for ind in val_ids]
+
+    training_json_path = "/home/rchhibba/preAD/Dataset/training_js_array.json";
+    validation_json_path = "/home/rchhibba/preAD/Dataset/validation_js_array.json";
+    # Read the training data from the JSON file
+    with open(training_json_path, 'r') as file:
+        data_path_train = json.load(file)
+    
+    # Read the validation data from the JSON file
+    with open(validation_json_path, 'r') as file:
+        data_path_val = json.load(file)
+    
+    # val_ids is not utilized in this context, so return an empty list for it
+    val_ids = []
+    
     return data_path_train, data_path_val, val_ids
 
 

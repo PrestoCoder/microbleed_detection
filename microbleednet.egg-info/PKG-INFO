@@ -5,6 +5,5 @@ Summary: DL method for cerebral microbleed segmentation
 Author: Vaanathi Sundaresan
 Requires-Dist: nibabel>=2.0.0
 Requires-Dist: scipy
-Requires-Dist: torch
 Requires-Dist: numpy
 Requires-Dist: scikit-image

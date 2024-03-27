@@ -46,9 +46,12 @@ def main(sub_name_dicts, ft_params, aug=True, save_cp=True, save_wei=True, save_
 
     try:
         tmodel_path = os.path.join(model_dir, 'Microbleednet_cdisc_teacher_model.pth')
+        print("tmodel_path", tmodel_path)
         tmodel = microbleednet_utils.loading_model(tmodel_path, tmodel, mode='full_model')
 
         tmodel_class_path = os.path.join(model_dir, 'Microbleednet_cdisc_teacher_class_model.pth')
+        print("tmodel_class_path", tmodel_class_path)
+
         tmodel_class = microbleednet_utils.loading_model(tmodel_class_path,
                                                          tmodel_class, mode='full_model')
     except:

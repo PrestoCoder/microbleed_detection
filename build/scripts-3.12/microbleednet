@@ -1,4 +1,4 @@
-#!/Library/Frameworks/Python.framework/Versions/3.12/bin/python3
+#!/home/rchhibba/.conda/envs/pread2/bin/python
 import argparse
 import sys
 import pkg_resources

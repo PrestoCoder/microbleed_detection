@@ -1,4 +1,4 @@
-#!/usr/bin/env fslpython
+#!/home/rchhibba/miniconda3/bin/python
 import argparse
 import sys
 import pkg_resources
